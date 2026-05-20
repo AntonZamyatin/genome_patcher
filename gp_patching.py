@@ -186,14 +186,17 @@ class GenomePatcher:
         if not cigartuples:
             return 0.0, 0
         has_eqx = any(op in (7, 8) for op, _ in cigartuples)
+        insertions = sum(length for op, length in cigartuples if op == 1)
+        deletions  = sum(length for op, length in cigartuples if op == 2)
         if has_eqx:
-            matches = sum(length for op, length in cigartuples if op == 7)
+            matches    = sum(length for op, length in cigartuples if op == 7)
             mismatches = sum(length for op, length in cigartuples if op == 8)
-            aligned = matches + mismatches
+            aligned    = matches + mismatches
         else:
             matches = sum(length for op, length in cigartuples if op == 0)
             aligned = matches
-        pid = (float(matches) / float(aligned)) if aligned > 0 else 0.0
+        pid_denom = aligned + insertions + deletions
+        pid = (float(matches) / float(pid_denom)) if pid_denom > 0 else 0.0
         return pid, aligned
 
     @staticmethod
